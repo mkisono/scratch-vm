@@ -26,7 +26,12 @@ class Scratch3DBlocks {
                 {
                     opcode: "thetaViewer",
                     blockType: BlockType.COMMAND,
-                    text: "360°写真をぐるぐる回す [INTERVAL]",
+                    text: "360°写真をぐるぐる回す"
+                },
+                {
+                    opcode: "speed",
+                    blockType: BlockType.COMMAND,
+                    text: "回転スピード [INTERVAL]",
                     arguments: {
                         INTERVAL: {
                             type: ArgumentType.NUMBER,
@@ -126,10 +131,14 @@ class Scratch3DBlocks {
             });
     }
 
-    thetaViewer(args) {
-        this.interval = Cast.toNumber(args.INTERVAL);
+    thetaViewer() {
+        this.interval = 0.1;
         this.init();
         this.animate();
+    }
+
+    speed(args) {
+        this.interval = Cast.toNumber(args.INTERVAL);
     }
 }
 
