@@ -16,6 +16,7 @@ class Scratch3DBlocks {
             this.layerGroup.testPattern,
             this.layerGroup.cursor
         ]);
+        this.interval = 0.1;
     }
 
     getInfo() {
@@ -60,28 +61,28 @@ class Scratch3DBlocks {
         this.phi = 0;
         this.theta = 0;
 
-        this.theta_camera = new THREE.PerspectiveCamera(75, 480 / 360, 1, 1100);
-        this.theta_camera.target = new THREE.Vector3(0, 0, 0);
+        this.camera = new THREE.PerspectiveCamera(75, 480 / 360, 1, 2000);
+        // this.camera.position.set(0, 0, 1000);
+        this.camera.target = new THREE.Vector3(0, 0, 0);
 
-        this.theta_scene = new THREE.Scene();
-
+        this.scene = new THREE.Scene();
         var geometry = new THREE.SphereBufferGeometry(500, 60, 40);
         // invert the geometry on the x-axis so that all of the faces point inward
         geometry.scale(-1, 1, 1);
         var texture = new THREE.TextureLoader().load(img);
         var material = new THREE.MeshBasicMaterial({ map: texture });
-        this.theta_mesh = new THREE.Mesh(geometry, material);
-        this.theta_scene.add(this.theta_mesh);
+        this.mesh = new THREE.Mesh(geometry, material);
+        this.scene.add(this.mesh);
 
-        this.theta_renderer = new THREE.WebGLRenderer();
-        this.theta_renderer.setSize(480, 360);
-        this.theta_renderer.render(this.theta_scene, this.theta_camera);
+        this.renderer = new THREE.WebGLRenderer();
+        this.renderer.setSize(480, 360);
+        this.renderer.render(this.scene, this.camera);
 
         this.canvas = document.createElement("canvas");
         this.canvas.width = 480;
         this.canvas.height = 360;
 
-        this.loadImage(this.theta_renderer.domElement.toDataURL())
+        this.loadImage(this.renderer.domElement.toDataURL())
             .then(res => {
                 this.ctx = this.canvas.getContext("2d");
                 this.ctx.drawImage(res, 0, 0);
@@ -96,9 +97,7 @@ class Scratch3DBlocks {
                     skinId: this.skinId
                 });
             })
-            .catch(e => {
-                console.error(e);
-            });
+            .catch(e => console.error(e));
     }
 
     animate() {
@@ -108,16 +107,19 @@ class Scratch3DBlocks {
         this.phi = THREE.Math.degToRad(90 - this.lat);
         this.theta = THREE.Math.degToRad(this.lon);
 
-        this.theta_camera.target.x =
+        // this.mesh.rotation.x += 0.005;
+        // this.mesh.rotation.y += 0.01;
+
+        this.camera.target.x =
             500 * Math.sin(this.phi) * Math.cos(this.theta);
-        this.theta_camera.target.y = 500 * Math.cos(this.phi);
-        this.theta_camera.target.z =
+        this.camera.target.y = 500 * Math.cos(this.phi);
+        this.camera.target.z =
             500 * Math.sin(this.phi) * Math.sin(this.theta);
 
-        this.theta_camera.lookAt(this.theta_camera.target);
-        this.theta_renderer.render(this.theta_scene, this.theta_camera);
+        this.camera.lookAt(this.camera.target);
+        this.renderer.render(this.scene, this.camera);
 
-        this.loadImage(this.theta_renderer.domElement.toDataURL())
+        this.loadImage(this.renderer.domElement.toDataURL())
             .then(res => {
                 this.ctx.drawImage(res, 0, 0);
                 this.runtime.renderer.updateBitmapSkin(
@@ -126,13 +128,10 @@ class Scratch3DBlocks {
                     1
                 );
             })
-            .catch(e => {
-                console.error(e);
-            });
+            .catch(e => console.error(e));
     }
 
     thetaViewer() {
-        this.interval = 0.1;
         this.init();
         this.animate();
     }
