@@ -16,6 +16,15 @@ class Scratch3DBlocks {
             this.layerGroup.testPattern,
             this.layerGroup.cursor
         ]);
+        this.lon = 0;
+        this.lat = 0;
+        this.phi = 0;
+        this.theta = 0;
+        this.isUserInteracting = false;
+        this.onMouseDownMouseX = 0;
+        this.onMouseDownMouseY = 0;
+        this.onMouseDownLon = 0;
+        this.onMouseDownLat = 0;
         this.interval = 0.1;
     }
 
@@ -56,11 +65,6 @@ class Scratch3DBlocks {
 
     init() {
         // https://threejs.org/examples/webgl_panorama_equirectangular.html
-        this.lon = 0;
-        this.lat = 0;
-        this.phi = 0;
-        this.theta = 0;
-
         this.camera = new THREE.PerspectiveCamera(75, 480 / 360, 1, 2000);
         // this.camera.position.set(0, 0, 1000);
         this.camera.target = new THREE.Vector3(0, 0, 0);
@@ -77,6 +81,44 @@ class Scratch3DBlocks {
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setSize(480, 360);
         this.renderer.render(this.scene, this.camera);
+
+        document.addEventListener(
+            "mousedown",
+            this.onPointerStart.bind(this),
+            false
+        );
+        document.addEventListener(
+            "mousemove",
+            this.onPointerMove.bind(this),
+            false
+        );
+        document.addEventListener(
+            "mouseup",
+            this.onPointerUp.bind(this),
+            false
+        );
+
+        document.addEventListener(
+            "wheel",
+            this.onDocumentMouseWheel.bind(this),
+            false
+        );
+
+        document.addEventListener(
+            "touchstart",
+            this.onPointerStart.bind(this),
+            false
+        );
+        document.addEventListener(
+            "touchmove",
+            this.onPointerMove.bind(this),
+            false
+        );
+        document.addEventListener(
+            "touchend",
+            this.onPointerUp.bind(this),
+            false
+        );
 
         this.canvas = document.createElement("canvas");
         this.canvas.width = 480;
@@ -102,7 +144,9 @@ class Scratch3DBlocks {
 
     animate() {
         requestAnimationFrame(this.animate.bind(this));
-        this.lon += this.interval;
+        if (this.isUserInteracting === false) {
+            this.lon += this.interval;
+        }
         this.lat = Math.max(-85, Math.min(85, this.lat));
         this.phi = THREE.Math.degToRad(90 - this.lat);
         this.theta = THREE.Math.degToRad(this.lon);
@@ -110,11 +154,9 @@ class Scratch3DBlocks {
         // this.mesh.rotation.x += 0.005;
         // this.mesh.rotation.y += 0.01;
 
-        this.camera.target.x =
-            500 * Math.sin(this.phi) * Math.cos(this.theta);
+        this.camera.target.x = 500 * Math.sin(this.phi) * Math.cos(this.theta);
         this.camera.target.y = 500 * Math.cos(this.phi);
-        this.camera.target.z =
-            500 * Math.sin(this.phi) * Math.sin(this.theta);
+        this.camera.target.z = 500 * Math.sin(this.phi) * Math.sin(this.theta);
 
         this.camera.lookAt(this.camera.target);
         this.renderer.render(this.scene, this.camera);
@@ -138,6 +180,37 @@ class Scratch3DBlocks {
 
     speed(args) {
         this.interval = Cast.toNumber(args.INTERVAL);
+    }
+
+    onPointerStart(event) {
+        this.isUserInteracting = true;
+        var clientX = event.clientX || event.touches[0].clientX;
+        var clientY = event.clientY || event.touches[0].clientY;
+        this.onMouseDownMouseX = clientX;
+        this.onMouseDownMouseY = clientY;
+        this.onMouseDownLon = this.lon;
+        this.onMouseDownLat = this.lat;
+    }
+
+    onPointerMove(event) {
+        if (this.isUserInteracting === true) {
+            var clientX = event.clientX || event.touches[0].clientX;
+            var clientY = event.clientY || event.touches[0].clientY;
+            this.lon =
+                (this.onMouseDownMouseX - clientX) * 0.1 + this.onMouseDownLon;
+            this.lat =
+                (clientY - this.onMouseDownMouseY) * 0.1 + this.onMouseDownLat;
+        }
+    }
+
+    onPointerUp() {
+        this.isUserInteracting = false;
+    }
+
+    onDocumentMouseWheel(event) {
+        var fov = this.camera.fov + event.deltaY * 0.05;
+        this.camera.fov = THREE.Math.clamp(fov, 10, 75);
+        this.camera.updateProjectionMatrix();
     }
 }
 
